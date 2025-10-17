@@ -19,3 +19,6 @@
 [submodule "ms-favorite"]
 	path = ms-favorite
 	url = https://github.com/HubertApp/MS-favorite.git
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/HubertApp/Api-Gateway.git
