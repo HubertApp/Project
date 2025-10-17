@@ -1,0 +1,21 @@
+[submodule "ms-disruption-manager"]
+	path = ms-disruption-manager
+	url = https://github.com/HubertApp/MS-disruption-manager.git
+[submodule "ms-itinerary-creator"]
+	path = ms-itinerary-creator
+	url = https://github.com/HubertApp/MS-itinerary-creator.git
+[submodule "ms-graph-manager"]
+	path = ms-graph-manager
+	url = https://github.com/HubertApp/MS-graph-manager.git
+[submodule "ms-admin"]
+	path = ms-admin
+	url = https://github.com/HubertApp/MS-admin.git
+[submodule "ms-user"]
+	path = ms-user
+	url = https://github.com/HubertApp/MS-user.git
+[submodule "ms-auth"]
+	path = ms-auth
+	url = https://github.com/HubertApp/MS-auth.git
+[submodule "ms-favorite"]
+	path = ms-favorite
+	url = https://github.com/HubertApp/MS-favorite.git
