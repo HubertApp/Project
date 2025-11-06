@@ -1,24 +1,31 @@
-[submodule "ms-disruption-manager"]
-	path = microservices/ms-disruption-manager
-	url = https://github.com/HubertApp/MS-disruption-manager.git
-[submodule "ms-itinerary-creator"]
-	path = microservices/ms-itinerary-creator
-	url = https://github.com/HubertApp/MS-itinerary-creator.git
-[submodule "ms-graph-manager"]
-	path = microservices/ms-graph-manager
-	url = https://github.com/HubertApp/MS-graph-manager.git
-[submodule "ms-admin"]
-	path = microservices/ms-admin
-	url = https://github.com/HubertApp/MS-admin.git
-[submodule "ms-user"]
-	path = microservices/ms-user
-	url = https://github.com/HubertApp/MS-user.git
-[submodule "ms-auth"]
-	path = microservices/ms-auth
-	url = https://github.com/HubertApp/MS-auth.git
-[submodule "ms-favorite"]
-	path = microservices/ms-favorite
-	url = https://github.com/HubertApp/MS-favorite.git
-[submodule "api-gateway"]
-	path = microservices/api-gateway
-	url = https://github.com/HubertApp/Api-Gateway.git
+
+[submodule "microservices/Api-Gateway"]
+	path = microservices/Api-Gateway
+	url = git@github.com:HubertApp/Api-Gateway.git
+[submodule "microservices/MS-favorite"]
+	path = microservices/MS-favorite
+	url = git@github.com:HubertApp/MS-favorite.git
+[submodule "microservices/MS-disruption-manager"]
+	path = microservices/MS-disruption-manager
+	url = git@github.com:HubertApp/MS-disruption-manager.git
+[submodule "microservices/MS-itinerary-creator"]
+	path = microservices/MS-itinerary-creator
+	url = git@github.com:HubertApp/MS-itinerary-creator.git
+[submodule "microservices/MS-graph-manager"]
+	path = microservices/MS-graph-manager
+	url = git@github.com:HubertApp/MS-graph-manager.git
+[submodule "microservices/MS-Admin"]
+	path = microservices/MS-Admin
+	url = git@github.com:HubertApp/MS-Admin.git
+[submodule "microservices/MS-User"]
+	path = microservices/MS-User
+	url = git@github.com:HubertApp/MS-User.git
+[submodule "microservices/MS-Auth"]
+	path = microservices/MS-Auth
+	url = git@github.com:HubertApp/MS-Auth.git
+[submodule "front/Front-user-app"]
+	path = front/Front-user-app
+	url = git@github.com:HubertApp/Front-user-app.git
+[submodule "front/Front-admin"]
+	path = front/Front-admin
+	url = git@github.com:HubertApp/Front-admin.git
