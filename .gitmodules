@@ -35,3 +35,6 @@
 [submodule "microservices/MS-itinerary-optimization"]
 	path = microservices/MS-itinerary-optimization
 	url = https://github.com/HubertApp/MS-itinerary-optimization.git
+[submodule "microservices/MS-notifications"]
+	path = microservices/MS-notifications
+	url = https://github.com/HubertApp/MS-notifications.git
