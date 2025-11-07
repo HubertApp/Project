@@ -29,3 +29,9 @@
 [submodule "front/Front-admin"]
 	path = front/Front-admin
 	url = git@github.com:HubertApp/Front-admin.git
+[submodule "microservices/MS-aom-agregator"]
+	path = microservices/MS-aom-agregator
+	url = https://github.com/HubertApp/MS-aom-agregator.git
+[submodule "microservices/MS-itinerary-optimization"]
+	path = microservices/MS-itinerary-optimization
+	url = https://github.com/HubertApp/MS-itinerary-optimization.git
