@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Project" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/front/Front-admin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/front/Front-user-app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/Api-Gateway" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-Admin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-Auth" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-User" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-disruption-manager" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-favorite" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-graph-manager" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/microservices/MS-itinerary-creator" vcs="Git" />
+  </component>
+</project>
