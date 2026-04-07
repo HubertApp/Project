@@ -1,0 +1,94 @@
+# Juste pour l'exemple après on utilisera l'idée de loan des fichiers makefile et des docker compose séparer mais avec meme network
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongodb_visualizer
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+    depends_on:
+      - mongodb
+
+  service-user:
+    build: ../MS-User/.
+    container_name: service_user
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/hubertapp_users
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=service-user
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=service-user,deployment.environment=development
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+    depends_on:
+      - mongodb
+      - otel-collector
+    ports:
+      - "3001:3001"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otel-collector.yaml 
+    ports:
+      - "4317:4317"
+      - "8889:8889"
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - jaeger
+
+
+  gateway:
+    image: ghcr.io/apollographql/router:v1.13.0
+    container_name: gateway
+    restart: always
+    depends_on:
+      - service-user
+      - otel-collector
+    environment:
+      APOLLO_ROUTER_SUPERGRAPH_PATH: /gateway/schema/supergraph.graphql
+      APOLLO_ROUTER_CONFIG_PATH: /gateway/config/router.yaml
+      APOLLO_ROUTER_LOG: debug
+    volumes:
+      - ./gateway/supergraph.graphql:/gateway/schema/supergraph.graphql
+      - ./gateway/router.yaml:/gateway/config/router.yaml
+    ports:
+      - 4000:4000
+
+volumes:
+  mongo_data:

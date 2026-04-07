@@ -1,0 +1,24 @@
+telemetry:
+    metrics:
+      otlp:
+        endpoint: "http://otel-collector:4317"
+  
+        protocol: grpc
+  
+        batch_processor:
+          scheduled_delay: 100ms
+          max_concurrent_exports: 1000
+          max_export_batch_size: 10000
+          max_export_timeout: 100s
+          max_queue_size: 10000
+
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+
+homepage:
+  enabled: false
+

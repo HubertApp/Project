@@ -1,0 +1,31 @@
+server:
+  http_listen_port: 3200
+
+# Cette section est CRUCIALE pour éviter l'erreur Kafka
+memberlist:
+  abort_if_cluster_join_fails: false
+  bind_port: 7946
+  join_members:
+    - localhost
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory # Indique de ne pas chercher de base de données externe
+      replication_factor: 1
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo
+    wal:
+      path: /tmp/tempo/wal # Le WAL est nécessaire pour le bon fonctionnement de l'ingester

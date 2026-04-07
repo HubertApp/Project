@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - APOLLO_SUPERGRAPH_CONFIG_PATH=./supergraph.graphql
+    depends_on:
+      - ms-auth
+    networks:
+      - microservices_net
+
+  ms-auth:
+    build:
+      context: ./ms-auth
+    container_name: ms-auth
+    ports:
+      - "9100:9100"
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    networks:
+      - microservices_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - microservices_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - microservices_net
+
+networks:
+  microservices_net:
+    driver: bridge

@@ -1,0 +1,11 @@
+federation_version: =2.3.2
+
+subgraphs:
+  user-service:
+    routing_url: http://service-user:3001/graphql
+    schema:
+      subgraph_url: http://localhost:3001/graphql
+  # auth-service:
+  #   routing_url: http://service-auth:3000
+  #   schema:
+  #     subgraph_url: http://localhost:3000
