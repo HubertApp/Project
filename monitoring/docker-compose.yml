@@ -1,4 +1,4 @@
-# Juste pour l'exemple après on utilisera l'idée de loan des fichiers makefile et des docker compose séparer mais avec meme network
+# Juste pour l'exemple après on utilisera l'idée de Loan des fichiers makefile et des docker compose séparer mais avec meme network
 
 services:
   mongodb:
@@ -8,7 +8,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-
+ 
   mongo-express:
     image: mongo-express:latest
     container_name: mongodb_visualizer
@@ -21,10 +21,13 @@ services:
       - ME_CONFIG_BASICAUTH_PASSWORD=pass
     depends_on:
       - mongodb
-
+ 
   service-user:
     build: ../MS-User/.
     container_name: service_user
+    labels:
+      logging: "promtail"
+      service: "service-user"
     environment:
       - MONGO_URL=mongodb://mongodb:27017/hubertapp_users
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
@@ -32,30 +35,32 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=service-user,deployment.environment=development
       - OTEL_METRICS_EXPORTER=otlp
       - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
     depends_on:
       - mongodb
       - otel-collector
     ports:
       - "3001:3001"
-
+ 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
     command: ["--config=/etc/otel-collector.yaml"]
     volumes:
-      - ./otel-collector.yaml:/etc/otel-collector.yaml 
+      - ./otel-collector.yaml:/etc/otel-collector.yaml
     ports:
       - "4317:4317"
       - "8889:8889"
     depends_on:
       - jaeger
-
+      - loki
+ 
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
     ports:
       - "16686:16686"
-
+ 
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -63,20 +68,51 @@ services:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
-
+ 
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+ 
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    volumes:
+      - ./promtail.yaml:/etc/promtail/promtail.yaml
+      # Accès aux logs Docker des containers
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki
+ 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - jaeger
-
-
+      - loki
+      - prometheus
+ 
   gateway:
     image: ghcr.io/apollographql/router:v1.13.0
     container_name: gateway
     restart: always
+    labels:
+      logging: "promtail"
+      service: "gateway"
     depends_on:
       - service-user
       - otel-collector
@@ -89,6 +125,7 @@ services:
       - ./gateway/router.yaml:/gateway/config/router.yaml
     ports:
       - 4000:4000
-
+ 
 volumes:
   mongo_data:
+  loki_data:
