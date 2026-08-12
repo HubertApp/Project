@@ -1,0 +1,58 @@
+# receivers:
+#   otlp:
+#     protocols:
+#       grpc:
+
+# exporters:
+#   otlp/tempo:
+#     endpoint: tempo:4317
+#     tls:
+#       insecure: true
+  
+#   prometheus:
+#     endpoint: "0.0.0.0:8889"
+
+# service:
+#   pipelines:
+#     traces:
+#       receivers: [otlp]
+#       exporters: [otlp/tempo]
+#     metrics:
+#       receivers: [otlp]
+#       exporters: [prometheus]
+
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+exporters:
+  debug: 
+    verbosity: detailed
+
+  otlp/jaeger:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+  
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+
+service:
+  pipelines:      
+    traces:
+      receivers: [otlp]
+      exporters: [otlp/jaeger, debug]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp/loki, debug]

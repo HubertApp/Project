@@ -1,0 +1,109 @@
+services:
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otel-collector.yaml
+    ports:
+      - "4317:4317"
+      - "8889:8889"
+    depends_on:
+      - jaeger
+      - loki
+    networks:
+      - hubertapp-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+    networks:
+      - hubertapp-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - hubertapp-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - hubertapp-network
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    volumes:
+      - ./promtail.yaml:/etc/promtail/promtail.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9080:9080"          # <-- AJOUT : permet d'ouvrir http://localhost:9080/targets pour debug
+    depends_on:
+      - loki
+    networks:
+      - hubertapp-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - jaeger
+      - loki
+      - prometheus
+    networks:
+      - hubertapp-network
+
+  gateway:
+    image: ghcr.io/apollographql/router:v2.1.0
+    container_name: gateway
+    restart: always
+    labels:
+      logging: "promtail"
+      service: "gateway"
+    depends_on:
+      - otel-collector
+    environment:
+      APOLLO_ROUTER_SUPERGRAPH_PATH: /gateway/schema/supergraph.graphql
+      APOLLO_ROUTER_CONFIG_PATH: /gateway/config/router.yaml
+      APOLLO_ROUTER_LOG: info
+      APOLLO_KEY: ${APOLLO_KEY}
+      APOLLO_GRAPH_REF: ${APOLLO_GRAPH_REF}
+    volumes:
+      - ./gateway/supergraph.graphql:/gateway/schema/supergraph.graphql
+      - ./gateway/router.yaml:/gateway/config/router.yaml
+      - ./gateway/scripts:/gateway/scripts
+    ports:
+      - 4000:4000
+    networks:
+      - hubertapp-network
+
+volumes:
+  loki_data:
+
+networks:
+  hubertapp-network:
+    external: true

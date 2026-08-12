@@ -1,0 +1,39 @@
+federation_version: =2.3.2
+
+subgraphs:
+  service-admin:
+    routing_url: http://service-admin:80/graphql
+    schema:
+      subgraph_url: http://localhost:8001/graphql
+
+  service-user:
+    routing_url: http://service-user:3001/graphql
+    schema:
+      subgraph_url: http://localhost:3001/graphql
+
+  service-aom-agregator:
+    routing_url: http://service-aom-agregator:80/graphql
+    schema:
+      subgraph_url: http://localhost:8002/graphql
+
+  service-notifications:
+    routing_url: http://service-notifications:3001/graphql
+    schema:
+      subgraph_url: http://localhost:3002/graphql
+
+  service-auth:
+    routing_url: http://service-auth:3000/graphql
+    schema:
+      subgraph_url: http://localhost:3004/graphql
+
+  service-graph-manager:
+    routing_url: http://service-graph-manager:3011/graphql
+    schema:
+      subgraph_url: http://localhost:3011/graphql
+
+  service-adminuser:
+    routing_url: http://service-adminuser:3003/graphql
+    schema:
+      subgraph_url: http://localhost:3003/graphql
+
+# rover supergraph compose --config ./super-graph.yml --output ./gateway/supergraph.graphql

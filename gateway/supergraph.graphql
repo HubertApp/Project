@@ -1,0 +1,294 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/inaccessible/v0.2", for: SECURITY)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @inaccessible on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+type Auth
+  @join__type(graph: SERVICE_AUTH)
+{
+  accessToken: String!
+}
+
+input CreateUserInput
+  @join__type(graph: SERVICE_USER)
+{
+  googleId: ID!
+  email: String
+  age: Int
+  pseudo: String
+  role: String
+  created_at: DateTime = "2026-08-11T11:46:20.355Z"
+  updated_at: DateTime = "2026-08-11T11:46:20.355Z"
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+  @join__type(graph: SERVICE_ADMIN)
+  @join__type(graph: SERVICE_USER)
+
+type Departure
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  tripId: ID!
+  stopSequence: Int
+  arrivalTime: String
+  departureTime: String
+  headsign: String
+  route: Route
+}
+
+type GeoJSONLineString
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  type: String!
+  coordinates: [[Float!]!]!
+}
+
+type GeoJSONPoint
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  type: String!
+  coordinates: [Float!]!
+  latitude: Float
+  longitude: Float
+}
+
+type GetUserResponse
+  @join__type(graph: SERVICE_USER)
+{
+  googleId: ID!
+  email: String
+  age: Int
+  pseudo: String
+  role: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  SERVICE_ADMIN @join__graph(name: "service-admin", url: "http://service-admin:80/graphql")
+  SERVICE_AOM_AGREGATOR @join__graph(name: "service-aom-agregator", url: "http://service-aom-agregator:80/graphql")
+  SERVICE_AUTH @join__graph(name: "service-auth", url: "http://service-auth:3000/graphql")
+  SERVICE_NOTIFICATIONS @join__graph(name: "service-notifications", url: "http://service-notifications:3001/graphql")
+  SERVICE_USER @join__graph(name: "service-user", url: "http://service-user:3001/graphql")
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Mutation
+  @join__type(graph: SERVICE_ADMIN)
+  @join__type(graph: SERVICE_AUTH)
+  @join__type(graph: SERVICE_NOTIFICATIONS)
+  @join__type(graph: SERVICE_USER)
+{
+  createTransitNetwork(data: TransitNetworkInput!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
+  updateTransitNetwork(externalId: String!, data: TransitNetworkInput!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
+  deleteTransitNetwork(externalId: String!): Boolean! @join__field(graph: SERVICE_ADMIN)
+  loginWithGoogle(idToken: String!): Auth! @join__field(graph: SERVICE_AUTH)
+  createNotification(userId: ID!, content: String!): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
+  createUser(createUserInput: CreateUserInput!): GetUserResponse! @inaccessible @join__field(graph: SERVICE_USER)
+  updateUser(updateUserInput: UpdateUserInput!): String! @join__field(graph: SERVICE_USER)
+  removeUser(googleId: String!): String! @join__field(graph: SERVICE_USER)
+}
+
+type Notification
+  @join__type(graph: SERVICE_NOTIFICATIONS)
+{
+  id: ID!
+  userId: String!
+  content: String!
+  isRead: Boolean!
+  createdAt: String!
+}
+
+type PaginatedRoutes
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  items: [Route!]!
+  totalCount: Int!
+  page: Int!
+  pageSize: Int!
+  totalPages: Int!
+}
+
+type PaginatedTransitNetworks
+  @join__type(graph: SERVICE_ADMIN)
+{
+  totalCount: Int!
+  totalPages: Int!
+  limit: Int!
+  offset: Int!
+  items: [TransitNetwork!]
+}
+
+type Query
+  @join__type(graph: SERVICE_ADMIN)
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+  @join__type(graph: SERVICE_AUTH)
+  @join__type(graph: SERVICE_NOTIFICATIONS)
+  @join__type(graph: SERVICE_USER)
+{
+  searchTransitNetworksDatasets(fournisseurId: String!): [StandardDatasets!]! @join__field(graph: SERVICE_ADMIN)
+  getRegistredTransitNetworks(actualPage: Int! = 1, limit: Int! = 10, offset: Int! = 0): PaginatedTransitNetworks! @join__field(graph: SERVICE_ADMIN)
+  stopsNearby(lat: Float!, lon: Float!, radiusMeters: Int! = 500, first: Int! = 20, networkId: ID = null): [Stop!]! @join__field(graph: SERVICE_AOM_AGREGATOR)
+  stop(id: ID!): Stop @join__field(graph: SERVICE_AOM_AGREGATOR)
+  routes(networkId: ID = null, page: Int! = 1, pageSize: Int! = 25): PaginatedRoutes! @join__field(graph: SERVICE_AOM_AGREGATOR)
+  route(id: ID!): Route @join__field(graph: SERVICE_AOM_AGREGATOR)
+  status: String! @join__field(graph: SERVICE_AOM_AGREGATOR)
+  getAllNotifications: [Notification]! @join__field(graph: SERVICE_NOTIFICATIONS)
+  getMe: GetUserResponse! @join__field(graph: SERVICE_USER)
+  getOne: GetUserResponse! @join__field(graph: SERVICE_USER)
+  findAll: [GetUserResponse!]! @join__field(graph: SERVICE_USER)
+  findOne(googleId: String!): GetUserResponse! @join__field(graph: SERVICE_USER)
+}
+
+type Resource
+  @join__type(graph: SERVICE_ADMIN)
+{
+  title: String!
+  format: String!
+  endpointUrl: String!
+  updatedAt: DateTime
+  filesizeBytes: Int
+}
+
+input ResourceInput
+  @join__type(graph: SERVICE_ADMIN)
+{
+  title: String!
+  format: String!
+  endpointUrl: String!
+}
+
+type Route
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  id: ID!
+  shortName: String
+  longName: String
+  type: Int
+  color: String
+  textColor: String
+  network: TransitNetwork!
+  directions: [RouteDirection!]!
+}
+
+type RouteDirection
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  directionId: Int!
+  headsign: String
+  stops: [Stop!]!
+  geometry: GeoJSONLineString
+}
+
+type StandardDatasets
+  @join__type(graph: SERVICE_ADMIN)
+{
+  fournisseurId: String!
+  externalId: String!
+  name: String!
+  countryCode: String!
+  cityOrRegion: String!
+  resources: [StandardResource!]!
+}
+
+type StandardResource
+  @join__type(graph: SERVICE_ADMIN)
+{
+  title: String!
+  format: String!
+  endpointUrl: String!
+  updatedAt: DateTime!
+  filesizeBytes: Int
+}
+
+type Stop
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  id: ID!
+  name: String
+  location: GeoJSONPoint
+  distanceMeters: Float
+  network: TransitNetwork!
+  departures(first: Int! = 10, after: String = null): [Departure!]!
+  routes: [Route!]!
+}
+
+type TransitNetwork
+  @join__type(graph: SERVICE_ADMIN, key: "externalId")
+  @join__type(graph: SERVICE_AOM_AGREGATOR, key: "externalId", extension: true)
+{
+  fournisseurId: String! @join__field(graph: SERVICE_ADMIN)
+  externalId: String!
+  name: String! @join__field(graph: SERVICE_ADMIN)
+  countryCode: String! @join__field(graph: SERVICE_ADMIN)
+  cityOrRegion: String! @join__field(graph: SERVICE_ADMIN)
+  endpointUrl: String @join__field(graph: SERVICE_ADMIN)
+  description: String @join__field(graph: SERVICE_ADMIN)
+  resources: [Resource!] @join__field(graph: SERVICE_ADMIN)
+}
+
+input TransitNetworkInput
+  @join__type(graph: SERVICE_ADMIN)
+{
+  fournisseurId: String!
+  externalId: String!
+  name: String!
+  countryCode: String!
+  cityOrRegion: String!
+  endpointUrl: String = null
+  description: String = null
+  resources: [ResourceInput!] = null
+}
+
+input UpdateUserInput
+  @join__type(graph: SERVICE_USER)
+{
+  email: String
+  age: Int
+  pseudo: String
+  role: String
+  update_at: DateTime
+}
+
+type User
+  @join__type(graph: SERVICE_NOTIFICATIONS, key: "id")
+{
+  id: ID!
+  notifications: [Notification]
+}
