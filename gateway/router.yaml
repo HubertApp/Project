@@ -1,0 +1,92 @@
+cors:
+  origins:
+      - https://localhost
+      - capacitor://localhost
+      - http://localhost:5173
+      - https://studio.apollographql.com
+      # Front sur minikube via `kubectl port-forward` (voir k8s/port-forward.ps1).
+      # En localhost, pas un nom d'hôte perso : Google OAuth n'autorise le HTTP
+      # (non-HTTPS) que pour "localhost" exactement — voir k8s/50-front.yaml.
+      - http://localhost:8080
+
+  # Test depuis un téléphone sur le même réseau : l'origine de la page devient
+  # http://<IP-LAN>:5173, que la liste ci-dessus ne couvre pas. Le motif évite
+  # de rééditer ce fichier à chaque renouvellement de bail DHCP.
+  # (Réseaux privés uniquement — 192.168.x.x et le range Tailscale 100.x.x.x.)
+  match_origins:
+      - "^http://192\\.168\\.\\d{1,3}\\.\\d{1,3}:5173$"
+      - "^http://100\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:5173$"
+
+  allow_credentials: true
+
+rhai:
+  scripts: /gateway/scripts/
+  main: main.rhai
+
+
+headers:
+  all:
+    request:
+      - propagate:
+          named: x-user-id
+      - propagate:
+          named: x-user-role
+      - propagate:
+          named: x-user-email
+      - propagate:
+          named: x-user-pseudo
+      - propagate:
+          named: x-user-age
+      - propagate:
+          named: x-auth-state
+
+# authentication:
+#   router:
+#     jwt:
+#       jwks:
+#         - url: "http://service-auth:3007/auth/jwks"
+      
+#       on_error: Continue
+
+#       sources:
+#         - type: cookie
+#           name: jwt
+
+include_subgraph_errors:
+  all: true
+
+# Le client HTTP du Router (reqwest/hickory-dns) tente une résolution DNS
+# AAAA (IPv6) en plus de l'A (IPv4) pour joindre les subgraphs. Sur le réseau
+# Docker "hubert-network" (IPv4 uniquement), la requête AAAA échoue avec
+# "no record found", et le Router remonte ça comme une erreur fatale au lieu
+# de retomber sur l'IPv4 — contrairement à Node.js (ex: service-auth), qui
+# gère ce cas nativement. On force donc une résolution IPv4 uniquement pour
+# tous les subgraphs, ce qui règle le problème à la racine plutôt que de
+# bricoler des entrées /etc/hosts ou des IP en dur.
+traffic_shaping:
+  all:
+    dns_resolution_strategy: ipv4_only
+
+telemetry:
+  exporters:
+    metrics:
+      otlp:
+        enabled: true
+        endpoint: "http://otel-collector:4317"
+        protocol: grpc
+        batch_processor:
+          scheduled_delay: 100ms
+          max_concurrent_exports: 1000
+          max_export_batch_size: 10000
+          max_export_timeout: 100s
+          max_queue_size: 10000
+
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+
+homepage:
+  enabled: false

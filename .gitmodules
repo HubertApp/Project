@@ -2,12 +2,6 @@
 [submodule "microservices/Api-Gateway"]
 	path = microservices/Api-Gateway
 	url = git@github.com:HubertApp/Api-Gateway.git
-[submodule "microservices/MS-favorite"]
-	path = microservices/MS-favorite
-	url = git@github.com:HubertApp/MS-favorite.git
-[submodule "microservices/MS-disruption-manager"]
-	path = microservices/MS-disruption-manager
-	url = git@github.com:HubertApp/MS-disruption-manager.git
 [submodule "microservices/MS-itinerary-creator"]
 	path = microservices/MS-itinerary-creator
 	url = git@github.com:HubertApp/MS-itinerary-creator.git
@@ -38,3 +32,6 @@
 [submodule "microservices/MS-notifications"]
 	path = microservices/MS-notifications
 	url = https://github.com/HubertApp/MS-notifications.git
+[submodule "microservices/MS-Admin_user"]
+	path = microservices/MS-Admin_user
+	url = https://github.com/HubertApp/MS-Admin_user.git
