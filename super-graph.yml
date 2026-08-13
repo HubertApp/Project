@@ -1,5 +1,11 @@
 federation_version: =2.3.2
 
+# routing_url  : comment la gateway joint le subgraph DEPUIS le reseau docker
+#                -> alias DNS + port INTERNE du conteneur
+# subgraph_url : comment rover introspecte le subgraph DEPUIS l hote
+#                -> localhost + port PUBLIE
+# Confondre les deux produit un supergraph qui compose mais ne resout jamais
+# (SUBREQUEST_HTTP_ERROR / connection refused des le premier appel).
 subgraphs:
   service-admin:
     routing_url: http://service-admin:80/graphql
@@ -17,17 +23,17 @@ subgraphs:
       subgraph_url: http://localhost:8002/graphql
 
   service-notifications:
-    routing_url: http://service-notifications:3001/graphql
+    routing_url: http://service-notifications:3008/graphql
     schema:
-      subgraph_url: http://localhost:3002/graphql
+      subgraph_url: http://localhost:3008/graphql
 
   service-auth:
-    routing_url: http://service-auth:3000/graphql
+    routing_url: http://service-auth:3004/graphql
     schema:
       subgraph_url: http://localhost:3004/graphql
 
-  service-graph-manager:
-    routing_url: http://service-graph-manager:3011/graphql
+  graph-service:
+    routing_url: http://ms-graph-manager:3011/graphql
     schema:
       subgraph_url: http://localhost:3011/graphql
 
