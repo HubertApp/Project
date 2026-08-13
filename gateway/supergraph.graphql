@@ -24,10 +24,13 @@ directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
 
 type AdminUser
-  @join__type(graph: SERVICE_ADMINUSER)
+  @join__type(graph: SERVICE_ADMINUSER, key: "id")
 {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  id: ID!
+  firstname: String!
+  lastname: String!
+  email: String!
+  authLevel: Int!
 }
 
 type Auth
@@ -55,8 +58,11 @@ input CoordinateInput
 input CreateAdminUserInput
   @join__type(graph: SERVICE_ADMINUSER)
 {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  firstname: String!
+  lastname: String!
+  email: String!
+  password: String!
+  authLevel: Int!
 }
 
 input CreateUserInput
@@ -67,8 +73,8 @@ input CreateUserInput
   age: Int
   pseudo: String
   role: String
-  created_at: DateTime = "2026-08-13T13:02:10.800Z"
-  updated_at: DateTime = "2026-08-13T13:02:10.800Z"
+  created_at: DateTime = "2026-08-13T16:59:59.172Z"
+  updated_at: DateTime = "2026-08-13T16:59:59.172Z"
 }
 
 """Date with time (isoformat)"""
@@ -200,8 +206,8 @@ type Mutation
   updateTransitNetwork(externalId: String!, data: TransitNetworkInput!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
   deleteTransitNetwork(externalId: String!): Boolean! @join__field(graph: SERVICE_ADMIN)
   createAdminUser(createAdminUserInput: CreateAdminUserInput!): AdminUser! @join__field(graph: SERVICE_ADMINUSER)
-  updateAdminUser(updateAdminUserInput: UpdateAdminUserInput!): AdminUser! @join__field(graph: SERVICE_ADMINUSER)
-  removeAdminUser(id: Int!): AdminUser! @join__field(graph: SERVICE_ADMINUSER)
+  updateAdminUser(updateAdminUserInput: UpdateAdminUserInput!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
+  removeAdminUser(id: ID!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   loginWithGoogle(idToken: String!): Auth! @join__field(graph: SERVICE_AUTH)
   loginAdmin(email: String!, password: String!): Auth! @join__field(graph: SERVICE_AUTH)
   createNotification(userId: ID!, content: String!, channels: [String!]): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
@@ -276,7 +282,9 @@ type Query
   getItineraireFromTo(request: RouteRequestDTO!, frictionUpdates: [FrictionUpdateDTO!] = null): ItineraryResultDTO @join__field(graph: GRAPH_SERVICE)
   searchTransitNetworksDatasets(fournisseurId: String!): [StandardDatasets!]! @join__field(graph: SERVICE_ADMIN)
   getRegistredTransitNetworks(actualPage: Int! = 1, limit: Int! = 10, offset: Int! = 0): PaginatedTransitNetworks! @join__field(graph: SERVICE_ADMIN)
-  adminUser(id: Int!): AdminUser! @join__field(graph: SERVICE_ADMINUSER)
+  adminUsers: [AdminUser!]! @join__field(graph: SERVICE_ADMINUSER)
+  adminUser(id: ID!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
+  byEmailAndPassword(email: String!, password: String!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   stopsNearby(lat: Float!, lon: Float!, radiusMeters: Int! = 500, first: Int! = 20, networkId: ID = null): [Stop!]! @join__field(graph: SERVICE_AOM_AGREGATOR)
   stop(id: ID!): Stop @join__field(graph: SERVICE_AOM_AGREGATOR)
   routes(networkId: ID = null, page: Int! = 1, pageSize: Int! = 25): PaginatedRoutes! @join__field(graph: SERVICE_AOM_AGREGATOR)
@@ -424,9 +432,12 @@ input TransitNetworkInput
 input UpdateAdminUserInput
   @join__type(graph: SERVICE_ADMINUSER)
 {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
+  id: ID!
+  firstname: String
+  lastname: String
+  email: String
+  password: String
+  authLevel: Int
 }
 
 input UpdateUserInput
