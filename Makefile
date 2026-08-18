@@ -9,7 +9,7 @@ ADMIN := $(MS_DIR)/MS-Admin
 AOM := $(MS_DIR)/MS-aom-agregator
 AUTH := $(MS_DIR)/MS-Auth
 USER := $(MS_DIR)/MS-User
-ADMIN_USER := $(MS_DIR)/MS-Admin_User
+ADMIN_USER := $(MS_DIR)/MS-Admin_user
 NOTIFICATIONS := $(MS_DIR)/MS-notifications
 GRAPH_MANAGER := $(MS_DIR)/MS-graph-manager
 
