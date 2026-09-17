@@ -2,36 +2,48 @@
 [submodule "microservices/Api-Gateway"]
 	path = microservices/Api-Gateway
 	url = git@github.com:HubertApp/Api-Gateway.git
+	branch = develop
 [submodule "microservices/MS-itinerary-creator"]
 	path = microservices/MS-itinerary-creator
 	url = git@github.com:HubertApp/MS-itinerary-creator.git
+	branch = develop
 [submodule "microservices/MS-graph-manager"]
 	path = microservices/MS-graph-manager
 	url = git@github.com:HubertApp/MS-graph-manager.git
+	branch = develop
 [submodule "microservices/MS-Admin"]
 	path = microservices/MS-Admin
 	url = git@github.com:HubertApp/MS-Admin.git
+	branch = develop
 [submodule "microservices/MS-User"]
 	path = microservices/MS-User
 	url = git@github.com:HubertApp/MS-User.git
+	branch = develop
 [submodule "microservices/MS-Auth"]
 	path = microservices/MS-Auth
 	url = git@github.com:HubertApp/MS-Auth.git
+	branch = develop
 [submodule "front/Front-user-app"]
 	path = front/Front-user-app
 	url = git@github.com:HubertApp/Front-user-app.git
+	branch = develop
 [submodule "front/Front-admin"]
 	path = front/Front-admin
 	url = git@github.com:HubertApp/Front-admin.git
+	branch = develop
 [submodule "microservices/MS-aom-agregator"]
 	path = microservices/MS-aom-agregator
 	url = https://github.com/HubertApp/MS-aom-agregator.git
+	branch = develop
 [submodule "microservices/MS-itinerary-optimization"]
 	path = microservices/MS-itinerary-optimization
 	url = https://github.com/HubertApp/MS-itinerary-optimization.git
+	branch = develop
 [submodule "microservices/MS-notifications"]
 	path = microservices/MS-notifications
 	url = https://github.com/HubertApp/MS-notifications.git
+	branch = develop
 [submodule "microservices/MS-Admin_user"]
 	path = microservices/MS-Admin_user
 	url = https://github.com/HubertApp/MS-Admin_user.git
+	branch = develop
