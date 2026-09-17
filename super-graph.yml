@@ -7,20 +7,20 @@ federation_version: =2.12.1
 # Confondre les deux produit un supergraph qui compose mais ne resout jamais
 # (SUBREQUEST_HTTP_ERROR / connection refused des le premier appel).
 subgraphs:
-  # service-admin:
-  #   routing_url: http://service-admin:80/graphql
-  #   schema:
-  #     subgraph_url: http://localhost:8001/graphql
+  service-admin:
+    routing_url: http://service_admin:80/graphql
+    schema:
+      subgraph_url: http://localhost:8001/graphql
 
   service-user:
     routing_url: http://service-user:3001/graphql
     schema:
       subgraph_url: http://localhost:3001/graphql
 
-  # service-aom-agregator:
-  #   routing_url: http://service-aom-agregator:80/graphql
-  #   schema:
-  #     subgraph_url: http://localhost:8002/graphql
+  service-aom-agregator:
+    routing_url: http://service-aom-agregator:80/graphql
+    schema:
+      subgraph_url: http://localhost:8002/graphql
 
   service-notifications:
     routing_url: http://service-notifications:3008/graphql
