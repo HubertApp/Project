@@ -9,6 +9,7 @@ services:
       - ./otel-collector.yaml:/etc/otel-collector.yaml
     ports:
       - "4317:4317"
+      - "4318:4318"
       - "8889:8889"
     depends_on:
       - jaeger
@@ -46,16 +47,20 @@ services:
     networks:
       - hubert-network
  
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    command: -config.file=/etc/promtail/promtail.yaml
+  alloy:
+    image: grafana/alloy:v1.19.2
+    container_name: alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
     volumes:
-      - ./promtail.yaml:/etc/promtail/promtail.yaml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./alloy/docker.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
     ports:
-      - "9080:9080"
+      - "12345:12345"
     depends_on:
       - loki
     networks:
@@ -97,7 +102,7 @@ services:
     container_name: gateway
     restart: always
     labels:
-      logging: "promtail"
+      logging: "enabled"
       service: "gateway"
     depends_on:
       - otel-collector
@@ -119,6 +124,7 @@ services:
  
 volumes:
   loki_data:
+  alloy_data:
 
 networks:
   hubert-network:

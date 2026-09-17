@@ -40,17 +40,21 @@ headers:
       - propagate:
           named: x-auth-state
 
-# authentication:
-#   router:
-#     jwt:
-#       jwks:
-#         - url: "http://service-auth:3007/auth/jwks"
-      
-#       on_error: Continue
+authentication:
+  router:
+    jwt:
+      jwks:
+        - url: "http://service-auth:3004/auth/jwks"
+          algorithms: ["RS256"]
 
-#       sources:
-#         - type: cookie
-#           name: jwt
+      sources:
+        - type: cookie
+          name: jwt
+        - type: header
+          name: Authorization
+          value_prefix: Bearer
+
+      on_error: Continue
 
 include_subgraph_errors:
   all: true
@@ -69,6 +73,11 @@ traffic_shaping:
 
 telemetry:
   exporters:
+    tracing:
+      otlp:
+        enabled: true
+        endpoint: "http://otel-collector:4317"
+        protocol: grpc
     metrics:
       otlp:
         enabled: true
