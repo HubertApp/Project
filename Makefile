@@ -11,6 +11,7 @@ AUTH := $(MS_DIR)/MS-Auth
 USER := $(MS_DIR)/MS-User
 ADMIN_USER := $(MS_DIR)/MS-Admin_User
 NOTIFICATIONS := $(MS_DIR)/MS-notifications
+CREATOR := $(MS_DIR)/MS-itinerary-creator
 GRAPH_MANAGER := $(MS_DIR)/MS-graph-manager
 
 FRONT := $(FRONT_DIR)/Front-user-app
@@ -59,6 +60,7 @@ up: network infra-up
 	$(call COMPOSE,$(AUTH),docker-compose.yml) up -d --build
 	$(call COMPOSE,$(USER),docker-compose.yml) up -d --build
 	$(call COMPOSE,$(NOTIFICATIONS),docker-compose.yml) up -d --build
+	$(call COMPOSE,$(CREATOR),docker-compose.yml) up -d --build
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) up -d --build
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) up -d --build
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) up -d --build
@@ -80,6 +82,7 @@ down:
 	$(call COMPOSE,$(AUTH),docker-compose.yml) down
 	$(call COMPOSE,$(USER),docker-compose.yml) down --remove-orphans
 	$(call COMPOSE,$(NOTIFICATIONS),docker-compose.yml) down
+	$(call COMPOSE,$(CREATOR),docker-compose.yml) down 
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) down
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) down
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) down
@@ -94,6 +97,7 @@ build:
 	$(call COMPOSE,$(AUTH),docker-compose.yml) build
 	$(call COMPOSE,$(USER),docker-compose.yml) build
 	$(call COMPOSE,$(NOTIFICATIONS),docker-compose.yml) build
+	$(call COMPOSE,$(CREATOR),docker-compose.yml) build
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) build
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) build
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) build
