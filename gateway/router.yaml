@@ -3,6 +3,8 @@ cors:
       - https://localhost
       - capacitor://localhost
       - http://localhost:5173
+      # Front admin (Front-admin/docker-compose.yaml) : appel GraphQL fait depuis le navigateur.
+      - http://localhost:8004
       - https://studio.apollographql.com
       # Front sur minikube via `kubectl port-forward` (voir k8s/port-forward.ps1).
       # En localhost, pas un nom d'hôte perso : Google OAuth n'autorise le HTTP

@@ -8,7 +8,7 @@ federation_version: =2.12.1
 # (SUBREQUEST_HTTP_ERROR / connection refused des le premier appel).
 subgraphs:
   service-admin:
-    routing_url: http://service_admin:80/graphql
+    routing_url: http://service-admin:80/graphql
     schema:
       subgraph_url: http://localhost:8001/graphql
 
