@@ -27,18 +27,13 @@ rhai:
 headers:
   all:
     request:
-      - propagate:
-          named: x-user-id
-      - propagate:
-          named: x-user-role
-      - propagate:
-          named: x-user-email
-      - propagate:
-          named: x-user-pseudo
-      - propagate:
-          named: x-user-age
-      - propagate:
-          named: x-auth-state
+      - remove: { named: x-user-id }
+      - remove: { named: x-user-role }
+      - remove: { named: x-user-email }
+      - remove: { named: x-user-pseudo }
+      - remove: { named: x-user-age }
+      - remove: { named: x-auth-state }
+
 
 authentication:
   router:
