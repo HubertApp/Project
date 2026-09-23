@@ -25,6 +25,13 @@ directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on
 
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
 
+input AdminAuthInput
+  @join__type(graph: SERVICE_AUTH)
+{
+  email: String!
+  password: String!
+}
+
 type AdminUser
   @join__type(graph: SERVICE_ADMINUSER, key: "id")
 {
@@ -117,6 +124,14 @@ type EdgeDTO
   length: Float!
   layer: Int!
   name: String
+}
+
+input FavouriteUserInput
+  @join__type(graph: SERVICE_USER)
+{
+  userId: String!
+  coordinatesDeparture: [Float!]!
+  coordinatesArrival: [Float!]!
 }
 
 input FrictionUpdateDTO
@@ -236,12 +251,13 @@ type Mutation
   updateAdminUser(updateAdminUserInput: UpdateAdminUserInput!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   removeAdminUser(id: ID!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   loginWithGoogle(idToken: String!): Auth! @join__field(graph: SERVICE_AUTH)
-  loginAdmin(email: String!, password: String!): Auth! @join__field(graph: SERVICE_AUTH)
+  loginAdmin(input: AdminAuthInput!): Auth! @join__field(graph: SERVICE_AUTH)
   createNotification(userId: ID!, content: String!, channels: [String!]): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
   markNotificationAsRead(id: ID!): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
   createUser(createUserInput: CreateUserInput!): GetUserResponse! @inaccessible @join__field(graph: SERVICE_USER)
   updateUser(updateUserInput: UpdateUserInput!): String! @join__field(graph: SERVICE_USER)
   removeUser: String! @join__field(graph: SERVICE_USER)
+  addFavourite(favouriteId: FavouriteUserInput!): String! @join__field(graph: SERVICE_USER)
   updateNotificationPreferences(disabledChannels: [String!]!): GetUserResponse! @join__field(graph: SERVICE_USER)
 }
 
@@ -321,7 +337,7 @@ type Query
   transitGraph(networkId: ID!, departureTime: DateTime!, bbox: BoundingBoxInput = null): TransitGraph! @join__field(graph: SERVICE_AOM_AGREGATOR)
   getAllNotifications: [Notification]! @join__field(graph: SERVICE_NOTIFICATIONS)
   getMe: GetUserResponse! @join__field(graph: SERVICE_USER)
-  getOne: GetUserResponse! @join__field(graph: SERVICE_USER)
+  getOne: GetUserResponse! @inaccessible @join__field(graph: SERVICE_USER)
   findAll: [GetUserResponse!]! @join__field(graph: SERVICE_USER)
   findOne(googleId: String!): GetUserResponse! @join__field(graph: SERVICE_USER)
 }
