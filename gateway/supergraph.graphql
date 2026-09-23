@@ -214,7 +214,7 @@ scalar join__FieldValue
 
 enum join__Graph {
   GRAPH_SERVICE @join__graph(name: "graph-service", url: "http://ms-graph-manager:3011/graphql")
-  SERVICE_ADMIN @join__graph(name: "service-admin", url: "http://service_admin:80/graphql")
+  SERVICE_ADMIN @join__graph(name: "service-admin", url: "http://service-admin:80/graphql")
   SERVICE_ADMINUSER @join__graph(name: "service-adminuser", url: "http://service-adminuser:3003/graphql")
   SERVICE_AOM_AGREGATOR @join__graph(name: "service-aom-agregator", url: "http://service-aom-agregator:80/graphql")
   SERVICE_AUTH @join__graph(name: "service-auth", url: "http://service-auth:3004/graphql")

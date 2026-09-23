@@ -15,6 +15,7 @@ CREATOR := $(MS_DIR)/MS-itinerary-creator
 GRAPH_MANAGER := $(MS_DIR)/MS-graph-manager
 
 FRONT := $(FRONT_DIR)/Front-user-app
+FRONT_ADMIN := ${FRONT_DIR}/Front-admin
 
 COMPOSE = docker compose --project-directory $(1) -f $(1)/$(2)
 
@@ -23,6 +24,7 @@ COMPOSE = docker compose --project-directory $(1) -f $(1)/$(2)
 help:
 	@echo "up               lance l infra racine (rabbitmq, gateway, observabilite) et tous les microservices"
 	@echo "down             arrete tout"
+	@echo "down-all         arrete tout et supprime le reseau docker partage"
 	@echo "build            rebuild les images de tous les services"
 	@echo "seed             declenche l ingestion GTFS dans MS-aom-agregator (sinon la carte est vide)"
 	@echo "supergraph       recompose le supergraph depuis super-graph.yml et redemarre la gateway"
@@ -37,6 +39,7 @@ help:
 
 urls:
 	@echo "front        http://localhost:5173"
+	@echo "front-admin  http://localhost:8004"
 	@echo "gateway      http://localhost:4000/      (Apollo Router : GraphQL a la RACINE, pas /graphql)"
 	@echo "aom-agregator http://localhost:8002/graphql"
 	@echo "admin        http://localhost:8001/graphql"
@@ -64,6 +67,7 @@ up: network infra-up
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) up -d --build
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) up -d --build
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) up -d --build
+	$(call COMPOSE,$(FRONT_ADMIN),docker-compose.yaml) up -d --build
 	@echo ""
 	@echo "Tout est lance. Ensuite :"
 	@echo "  make seed        pour remplir la base GTFS (sinon /trafic n affiche aucun arret)"
@@ -86,6 +90,7 @@ down:
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) down
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) down
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) down
+	$(call COMPOSE,$(FRONT_ADMIN),docker-compose.yaml) down
 	docker compose -f docker-compose.yml down
 
 down-all: down clean-network
@@ -101,6 +106,7 @@ build:
 	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) build
 	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) build
 	$(call COMPOSE,$(FRONT),docker-compose.yaml) build
+	$(call COMPOSE,$(FRONT_ADMIN),docker-compose.yaml) build
 
 ps:
 	@docker ps --filter network=$(NETWORK) --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

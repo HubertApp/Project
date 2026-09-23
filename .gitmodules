@@ -1,8 +1,4 @@
 
-[submodule "microservices/Api-Gateway"]
-	path = microservices/Api-Gateway
-	url = git@github.com:HubertApp/Api-Gateway.git
-	branch = develop
 [submodule "microservices/MS-itinerary-creator"]
 	path = microservices/MS-itinerary-creator
 	url = git@github.com:HubertApp/MS-itinerary-creator.git
