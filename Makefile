@@ -19,7 +19,7 @@ FRONT_ADMIN := ${FRONT_DIR}/Front-admin
 
 COMPOSE = docker compose --project-directory $(1) -f $(1)/$(2)
 
-.PHONY: help network infra-up infra-down up down build ps logs supergraph restart-gateway clean-network seed urls
+.PHONY: help network infra-up infra-down up down build ps logs supergraph restart-gateway clean-network seed urls e2e e2e-list
 
 help:
 	@echo "up               lance l infra racine (rabbitmq, gateway, observabilite) et tous les microservices"
@@ -27,6 +27,8 @@ help:
 	@echo "down-all         arrete tout et supprime le reseau docker partage"
 	@echo "build            rebuild les images de tous les services"
 	@echo "seed             declenche l ingestion GTFS dans MS-aom-agregator (sinon la carte est vide)"
+	@echo "e2e              parcours end-to-end etape par etape (FROM=US1 pour reprendre, AUTO=1 sans pause)"
+	@echo "e2e-list         liste les etapes du parcours end-to-end"
 	@echo "supergraph       recompose le supergraph depuis super-graph.yml et redemarre la gateway"
 	@echo "restart-gateway  redemarre seulement la gateway (recharge supergraph.graphql et router.yaml)"
 	@echo "urls             rappelle les points d entree utiles"
@@ -124,3 +126,13 @@ restart-gateway:
 clean-network:
 	docker network rm $(NETWORK)
 	docker network rm $(NETWORK_ASTAR)
+
+# Parcours end-to-end contre la stack lancee (make up). Voir e2e/README.md.
+#   make e2e            interactif, pause apres chaque etape
+#   make e2e FROM=US1   reprend a l etape US1 avec l etat du run precedent
+#   make e2e AUTO=1     sans pause, s arrete au premier echec
+e2e:
+	uv run --project e2e python e2e/run.py $(if $(FROM),--from $(FROM)) $(if $(AUTO),--auto)
+
+e2e-list:
+	uv run --project e2e python e2e/run.py --list
