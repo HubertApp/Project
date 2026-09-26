@@ -155,20 +155,24 @@ def notification_mail(ctx: Ctx):
 
     # Lignes de log émises par ingestion_callback.py (MS-Admin), puis par
     # ms-notifications.controller.ts et smtp-mail.provider.ts (MS-notifications).
+    # L'objet et le texte du mail sont rédigés par MS-Admin, MS-notifications
+    # les livre tels quels.
+    notif_type = "AGGREGATION_SUCCESS" if status == "ok" else "AGGREGATION_ERROR"
     chain = [
         docker_logs.Link(
-            "MS-Admin publie l'événement vers MS-notifications", worker,
+            "MS-Admin publie la demande de notification", worker,
             rf"Notification admin publiee pour {network_id} \(status={status}\)",
-            rf"Notification admin non publiee pour {network_id}"),
+            rf"Notification admin (non publiee|ignoree) pour {network_id}",
+            "ADMIN_NOTIFICATION_EMAIL absent du .env de MS-Admin, ou broker indisponible"),
         docker_logs.Link(
-            "MS-notifications reçoit l'événement", notifications,
-            rf"transit_network_aggregated reçu \(network_id={network_id}, status={status}\)",
-            r"transit_network_aggregated ignoré",
-            "ADMIN_NOTIFICATION_EMAIL absent du .env de MS-notifications"),
+            "MS-notifications reçoit la demande", notifications,
+            rf"notification_requested reçu \(triggered_by=ms-admin, type={notif_type}",
+            r"notification_requested ignoré",
+            "payload incomplet envoyé par MS-Admin"),
         docker_logs.Link(
             "MS-notifications crée la notification et le job EMAIL", notifications,
-            rf"job EMAIL publié pour l'admin \(network_id={network_id}\)",
-            rf"Échec du traitement de transit_network_aggregated pour network_id={network_id}"),
+            rf"job\(s\) EMAIL publié\(s\) pour user_id=\S+ \(triggered_by=ms-admin, type={notif_type}\)",
+            rf"Échec du traitement de notification_requested pour user_id=\S+ \(triggered_by=ms-admin, type={notif_type}\)"),
         docker_logs.Link(
             f"le mail « {subject} » est envoyé en SMTP", notifications,
             rf'E-mail envoyé à \S+ \("{subject}',

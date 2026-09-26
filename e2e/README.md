@@ -54,12 +54,13 @@ Le jeton est masqué (`Bearer ***`). Pour les sondages de AD5, seul le dernier e
 mail, et on ne peut pas lire la boîte de l'admin. L'étape suit les quatre maillons de la chaîne :
 
 1. `ms-admin-worker` : `Notification admin publiee pour <réseau> (status=ok)`
-2. `service-notifications` : `transit_network_aggregated reçu (network_id=<réseau>, status=ok)`
-3. `service-notifications` : `job EMAIL publié pour l'admin (network_id=<réseau>)`
+2. `service-notifications` : `notification_requested reçu (triggered_by=ms-admin, type=AGGREGATION_SUCCESS, …)`
+3. `service-notifications` : `job(s) EMAIL publié(s) pour user_id=admin (triggered_by=ms-admin, type=AGGREGATION_SUCCESS)`
 4. `service-notifications` : `E-mail envoyé à … ("Agrégation terminée…")`
 
-Elle s'arrête au premier maillon en échec, avec sa cause : `ADMIN_NOTIFICATION_EMAIL` ou
-`SMTP_HOST` absents du `.env` de MS-notifications. `Livraison "EMAIL" réussie` ne suffit pas :
+Elle s'arrête au premier maillon en échec, avec sa cause : `ADMIN_NOTIFICATION_EMAIL` absent du
+`.env` de MS-Admin (c'est lui qui choisit destinataire, objet et texte), ou `SMTP_HOST` absent
+de celui de MS-notifications. `Livraison "EMAIL" réussie` ne suffit pas :
 MS-notifications l'écrit aussi quand `SMTP_HOST` est vide. Si un de ces messages de log change
 dans un service, adapter les motifs de `notification_mail` dans `scenarios/ad_admin.py`.
 
