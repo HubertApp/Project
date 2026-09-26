@@ -1,7 +1,13 @@
 """Parcours admin (Front-admin) : ajout d'un réseau, puis attente de l'ingestion faite par le back."""
 
+import re
+from datetime import datetime, timezone
+
+from rich.markup import escape
+
+import docker_logs
 import front_ops
-from lib import Ctx, StepFailed, step
+from lib import Ctx, StepFailed, WaitTimeout, step
 
 
 def registry(ctx: Ctx, offset: int, limit: int) -> list[dict]:
@@ -49,6 +55,7 @@ def create(ctx: Ctx):
     if not dataset:
         raise StepFailed("aucun dataset dans l'état : rejouer depuis AD1")
 
+    ctx.state["aggregation_requested_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     # variables construites comme create_transit_network_service
     body = front_ops.call(ctx, "admin.create", {
         "name": dataset["name"],
@@ -131,5 +138,69 @@ def ingestion(ctx: Ctx):
 
     ok = ctx.check("le statut affiché est DATA_AVAILABLE", final.get("status") == "DATA_AVAILABLE",
                    final.get("statusLabel"))
+    ctx.state["aggregation_status"] = "ok" if ok else "error"
     if not ok:
         ctx.info(indice="make logs SERVICE=ms-aom-agregator-worker")
+
+
+@step("AD6", "Admin · mail de fin d'agrégation (vérifié dans les logs)")
+def notification_mail(ctx: Ctx):
+    network_id = re.escape(_network_id(ctx))
+    since = ctx.state.get("aggregation_requested_at")
+    if not since:
+        raise StepFailed("heure de l'agrégation absente de l'état : rejouer depuis AD2")
+    status = ctx.state.get("aggregation_status", "ok")
+    subject = "Agrégation terminée" if status == "ok" else "Échec d'agrégation"
+    worker, notifications = ctx.config.admin_worker_container, ctx.config.notifications_container
+
+    # Lignes de log émises par ingestion_callback.py (MS-Admin), puis par
+    # ms-notifications.controller.ts et smtp-mail.provider.ts (MS-notifications).
+    chain = [
+        docker_logs.Link(
+            "MS-Admin publie l'événement vers MS-notifications", worker,
+            rf"Notification admin publiee pour {network_id} \(status={status}\)",
+            rf"Notification admin non publiee pour {network_id}"),
+        docker_logs.Link(
+            "MS-notifications reçoit l'événement", notifications,
+            rf"transit_network_aggregated reçu \(network_id={network_id}, status={status}\)",
+            r"transit_network_aggregated ignoré",
+            "ADMIN_NOTIFICATION_EMAIL absent du .env de MS-notifications"),
+        docker_logs.Link(
+            "MS-notifications crée la notification et le job EMAIL", notifications,
+            rf"job EMAIL publié pour l'admin \(network_id={network_id}\)",
+            rf"Échec du traitement de transit_network_aggregated pour network_id={network_id}"),
+        docker_logs.Link(
+            f"le mail « {subject} » est envoyé en SMTP", notifications,
+            rf'E-mail envoyé à \S+ \("{subject}',
+            rf'SMTP_HOST absent : e-mail à \S+ \("{subject}|Livraison abandonnée définitivement : canal="EMAIL"',
+            "SMTP_HOST absent ou relais SMTP en erreur côté MS-notifications"),
+    ]
+    found: dict[int, str] = {}
+    failed: dict[int, str] = {}
+
+    def scan():
+        logs = {c: docker_logs.read(c, since) for c in {worker, notifications}}
+        for i, link in enumerate(chain):
+            if i in found or i in failed:
+                continue
+            lines = logs[link.container]
+            if hit := docker_logs.first_match(lines, link.expected):
+                found[i] = hit
+            elif miss := docker_logs.first_match(lines, link.failure):
+                failed[i] = miss
+        done = len(found) == len(chain) or bool(failed)
+        return done, f"{len(found)}/{len(chain)} maillons"
+
+    ctx.info(depuis=since, conteneurs=f"{worker}, {notifications}")
+    try:
+        ctx.wait_until("lecture des logs", scan, ctx.config.notification_timeout, interval_s=2)
+    except WaitTimeout:
+        pass
+
+    rows = []
+    for i, link in enumerate(chain):
+        line = found.get(i) or failed.get(i)
+        detail = "" if i in found else (link.hint or "voir la ligne ci-dessous") if i in failed else "rien dans les logs"
+        ctx.check(link.label, i in found, detail)
+        rows.append([link.container, escape(line[-140:].strip()) if line else "—"])
+    ctx.table(["conteneur", "ligne de log"], rows)
