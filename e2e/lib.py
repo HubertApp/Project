@@ -31,6 +31,9 @@ class Config:
     fournisseur_id: str
     dataset_search: str
     ingestion_timeout: int
+    notification_timeout: int
+    admin_worker_container: str
+    notifications_container: str
     stop_queries: list[str]
 
     @classmethod
@@ -42,6 +45,9 @@ class Config:
             fournisseur_id=os.getenv("E2E_FOURNISSEUR_ID", "FR_TRANSPORT_GOUV"),
             dataset_search=os.getenv("E2E_DATASET_SEARCH", "metz"),
             ingestion_timeout=int(os.getenv("E2E_INGESTION_TIMEOUT", "180")),
+            notification_timeout=int(os.getenv("E2E_NOTIFICATION_TIMEOUT", "60")),
+            admin_worker_container=os.getenv("E2E_ADMIN_WORKER_CONTAINER", "ms-admin-worker"),
+            notifications_container=os.getenv("E2E_NOTIFICATIONS_CONTAINER", "service-notifications"),
             stop_queries=[
                 q.strip()
                 for q in os.getenv(
@@ -76,6 +82,10 @@ def step(id: str, title: str, known_failure: str | None = None):
 
 class StepFailed(Exception):
     """Arrête l'étape en cours."""
+
+
+class WaitTimeout(StepFailed):
+    pass
 
 
 @dataclass
@@ -218,7 +228,7 @@ class Ctx:
                     console.print(f"  [dim]terminé après {elapsed:.0f}s — {last}[/]")
                     return last
                 if elapsed >= timeout_s:
-                    raise StepFailed(f"{label} : délai de {timeout_s}s dépassé (dernier état : {last})")
+                    raise WaitTimeout(f"{label} : délai de {timeout_s}s dépassé (dernier état : {last})")
                 time.sleep(interval_s)
 
 

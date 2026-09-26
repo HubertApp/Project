@@ -44,10 +44,24 @@ Le jeton est masqué (`Bearer ***`). Pour les sondages de AD5, seul le dernier e
 | **AD3** | Sécurité · même formulaire sans jeton | `CreateTN` sans en-tête — **échec connu** |
 | **AD4** | Admin · page d'accueil | `GetTransitNetworks(0, 25)` |
 | **AD5** | Admin · fiche réseau rafraîchie jusqu'à `DATA_AVAILABLE` | `GetTransitNetworks(0, 1000)` |
+| **AD6** | Admin · mail de fin d'agrégation reçu | aucune : vérifié dans les logs Docker (voir ci-dessous) |
 | **US1** | Utilisateur · barre de recherche | `SearchStops` (vérifie la jointure fédérée `network`) |
 | **US2** | Utilisateur · fiche arrêt | `StopDetail` (lignes, prochains passages) |
 | **US3** | Utilisateur · carte trafic | `StopsNearby` |
 | **US4** | Utilisateur · planifier un trajet | aucune : le front utilise `data/mock` — **échec connu** |
+
+**AD6 lit les logs Docker** (`docker logs --since <heure de AD2>`) : aucun front n'affiche le
+mail, et on ne peut pas lire la boîte de l'admin. L'étape suit les quatre maillons de la chaîne :
+
+1. `ms-admin-worker` : `Notification admin publiee pour <réseau> (status=ok)`
+2. `service-notifications` : `transit_network_aggregated reçu (network_id=<réseau>, status=ok)`
+3. `service-notifications` : `job EMAIL publié pour l'admin (network_id=<réseau>)`
+4. `service-notifications` : `E-mail envoyé à … ("Agrégation terminée…")`
+
+Elle s'arrête au premier maillon en échec, avec sa cause : `ADMIN_NOTIFICATION_EMAIL` ou
+`SMTP_HOST` absents du `.env` de MS-notifications. `Livraison "EMAIL" réussie` ne suffit pas :
+MS-notifications l'écrit aussi quand `SMTP_HOST` est vide. Si un de ces messages de log change
+dans un service, adapter les motifs de `notification_mail` dans `scenarios/ad_admin.py`.
 
 Le script est rejouable : aucun front ne supprime de réseau, donc au second run AD2 fait ce
 que ferait l'admin, relancer l'agrégation depuis la fiche.
