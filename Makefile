@@ -95,7 +95,20 @@ down:
 	$(call COMPOSE,$(FRONT_ADMIN),docker-compose.yaml) down
 	docker compose -f docker-compose.yml down
 
-down-all: down clean-network
+reset-volumes:
+	$(call COMPOSE,$(ADMIN),docker-compose.yaml) down -v --remove-orphans
+	$(call COMPOSE,$(AOM),docker-compose.yaml) down -v --remove-orphans
+	$(call COMPOSE,$(AUTH),docker-compose.yml) down -v
+	$(call COMPOSE,$(USER),docker-compose.yml) down -v --remove-orphans
+	$(call COMPOSE,$(NOTIFICATIONS),docker-compose.yml) down -v
+	$(call COMPOSE,$(CREATOR),docker-compose.yml) down -v 
+	$(call COMPOSE,$(GRAPH_MANAGER),docker-compose.yaml) down -v
+	$(call COMPOSE,$(ADMIN_USER),docker-compose.yml) down -v
+	$(call COMPOSE,$(FRONT),docker-compose.yaml) down -v
+	$(call COMPOSE,$(FRONT_ADMIN),docker-compose.yaml) down -v
+	docker compose -f docker-compose.yml down -v
+
+down-all: reset-volumes clean-network
 
 build:
 	docker compose -f docker-compose.yml build
