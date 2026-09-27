@@ -1,0 +1,51 @@
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+
+  filter {
+    name   = "label"
+    values = ["logging=enabled"]
+  }
+}
+
+discovery.relabel "containers" {
+  targets = []   // on ne sert ici qu'à définir des règles
+
+  // "/service_user" -> "service_user"
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+  // badge service: "service-user"
+  rule {
+    source_labels = ["__meta_docker_container_label_service"]
+    target_label  = "service"
+  }
+  // nom du service dans le docker-compose
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+  // stdout ou stderr
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label  = "stream"
+  }
+}
+
+
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.containers.rules
+  labels        = { "env" = "docker" }
+  forward_to    = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

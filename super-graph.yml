@@ -1,4 +1,4 @@
-federation_version: =2.3.2
+federation_version: =2.12.1
 
 # routing_url  : comment la gateway joint le subgraph DEPUIS le reseau docker
 #                -> alias DNS + port INTERNE du conteneur

@@ -3,6 +3,8 @@ cors:
       - https://localhost
       - capacitor://localhost
       - http://localhost:5173
+      # Front admin (Front-admin/docker-compose.yaml) : appel GraphQL fait depuis le navigateur.
+      - http://localhost:8004
       - https://studio.apollographql.com
       # Front sur minikube via `kubectl port-forward` (voir k8s/port-forward.ps1).
       # En localhost, pas un nom d'hôte perso : Google OAuth n'autorise le HTTP
@@ -27,30 +29,29 @@ rhai:
 headers:
   all:
     request:
-      - propagate:
-          named: x-user-id
-      - propagate:
-          named: x-user-role
-      - propagate:
-          named: x-user-email
-      - propagate:
-          named: x-user-pseudo
-      - propagate:
-          named: x-user-age
-      - propagate:
-          named: x-auth-state
+      - remove: { named: x-user-id }
+      - remove: { named: x-user-role }
+      - remove: { named: x-user-email }
+      - remove: { named: x-user-pseudo }
+      - remove: { named: x-user-age }
+      - remove: { named: x-auth-state }
 
-# authentication:
-#   router:
-#     jwt:
-#       jwks:
-#         - url: "http://service-auth:3007/auth/jwks"
-      
-#       on_error: Continue
 
-#       sources:
-#         - type: cookie
-#           name: jwt
+authentication:
+  router:
+    jwt:
+      jwks:
+        - url: "http://service-auth:3004/auth/jwks"
+          algorithms: ["RS256"]
+
+      sources:
+        - type: cookie
+          name: jwt
+        - type: header
+          name: Authorization
+          value_prefix: Bearer
+
+      on_error: Continue
 
 include_subgraph_errors:
   all: true
@@ -69,6 +70,11 @@ traffic_shaping:
 
 telemetry:
   exporters:
+    tracing:
+      otlp:
+        enabled: true
+        endpoint: "http://otel-collector:4317"
+        protocol: grpc
     metrics:
       otlp:
         enabled: true

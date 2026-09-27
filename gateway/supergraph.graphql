@@ -1,6 +1,6 @@
 schema
   @link(url: "https://specs.apollo.dev/link/v1.0")
-  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/join/v0.5", for: EXECUTION)
   @link(url: "https://specs.apollo.dev/inaccessible/v0.2", for: SECURITY)
 {
   query: Query
@@ -9,9 +9,11 @@ schema
 
 directive @inaccessible on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
 
+directive @join__directive(graphs: [join__Graph!], name: String!, args: join__DirectiveArguments) repeatable on SCHEMA | OBJECT | INTERFACE | FIELD_DEFINITION
+
 directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
 
-directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean, overrideLabel: String, contextArguments: [join__ContextArgument!]) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
 directive @join__graph(name: String!, url: String!) on ENUM_VALUE
 
@@ -22,6 +24,13 @@ directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boole
 directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
 
 directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+input AdminAuthInput
+  @join__type(graph: SERVICE_AUTH)
+{
+  email: String!
+  password: String!
+}
 
 type AdminUser
   @join__type(graph: SERVICE_ADMINUSER, key: "id")
@@ -37,6 +46,15 @@ type Auth
   @join__type(graph: SERVICE_AUTH)
 {
   accessToken: String!
+}
+
+input BoundingBoxInput
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  north: Float!
+  south: Float!
+  east: Float!
+  west: Float!
 }
 
 type ComputedRoute
@@ -72,15 +90,17 @@ input CreateUserInput
   email: String
   age: Int
   pseudo: String
+  photo: String
   role: String
-  created_at: DateTime = "2026-08-13T16:59:59.172Z"
-  updated_at: DateTime = "2026-08-13T16:59:59.172Z"
+  created_at: DateTime
+  updated_at: DateTime
 }
 
 """Date with time (isoformat)"""
 scalar DateTime
   @join__type(graph: GRAPH_SERVICE)
   @join__type(graph: SERVICE_ADMIN)
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
   @join__type(graph: SERVICE_USER)
 
 type Departure
@@ -104,6 +124,14 @@ type EdgeDTO
   length: Float!
   layer: Int!
   name: String
+}
+
+input FavouriteUserInput
+  @join__type(graph: SERVICE_USER)
+{
+  userId: String!
+  coordinatesDeparture: [Float!]!
+  coordinatesArrival: [Float!]!
 }
 
 input FrictionUpdateDTO
@@ -152,7 +180,9 @@ type GetUserResponse
   email: String
   age: Int
   pseudo: String
+  photo: String
   role: String
+  notificationChannelsDisabled: [String!]
   created_at: DateTime
   updated_at: DateTime
 }
@@ -169,7 +199,18 @@ type ItineraryResultDTO
   traffic: TrafficInfoDTO!
 }
 
+input join__ContextArgument {
+  name: String!
+  type: String!
+  context: String!
+  selection: join__FieldValue!
+}
+
+scalar join__DirectiveArguments
+
 scalar join__FieldSet
+
+scalar join__FieldValue
 
 enum join__Graph {
   GRAPH_SERVICE @join__graph(name: "graph-service", url: "http://ms-graph-manager:3011/graphql")
@@ -204,17 +245,20 @@ type Mutation
 {
   createTransitNetwork(data: TransitNetworkInput!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
   updateTransitNetwork(externalId: String!, data: TransitNetworkInput!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
+  retriggerAggregation(externalId: String!): TransitNetwork! @join__field(graph: SERVICE_ADMIN)
   deleteTransitNetwork(externalId: String!): Boolean! @join__field(graph: SERVICE_ADMIN)
   createAdminUser(createAdminUserInput: CreateAdminUserInput!): AdminUser! @join__field(graph: SERVICE_ADMINUSER)
   updateAdminUser(updateAdminUserInput: UpdateAdminUserInput!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   removeAdminUser(id: ID!): AdminUser @join__field(graph: SERVICE_ADMINUSER)
   loginWithGoogle(idToken: String!): Auth! @join__field(graph: SERVICE_AUTH)
-  loginAdmin(email: String!, password: String!): Auth! @join__field(graph: SERVICE_AUTH)
+  loginAdmin(input: AdminAuthInput!): Auth! @join__field(graph: SERVICE_AUTH)
   createNotification(userId: ID!, content: String!, channels: [String!]): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
   markNotificationAsRead(id: ID!): Notification! @join__field(graph: SERVICE_NOTIFICATIONS)
   createUser(createUserInput: CreateUserInput!): GetUserResponse! @inaccessible @join__field(graph: SERVICE_USER)
   updateUser(updateUserInput: UpdateUserInput!): String! @join__field(graph: SERVICE_USER)
-  removeUser(googleId: String!): String! @join__field(graph: SERVICE_USER)
+  removeUser: String! @join__field(graph: SERVICE_USER)
+  addFavourite(favouriteId: FavouriteUserInput!): String! @join__field(graph: SERVICE_USER)
+  updateNotificationPreferences(disabledChannels: [String!]!): GetUserResponse! @join__field(graph: SERVICE_USER)
 }
 
 type NodeDTO
@@ -290,9 +334,10 @@ type Query
   routes(networkId: ID = null, page: Int! = 1, pageSize: Int! = 25): PaginatedRoutes! @join__field(graph: SERVICE_AOM_AGREGATOR)
   route(id: ID!): Route @join__field(graph: SERVICE_AOM_AGREGATOR)
   status: String! @join__field(graph: SERVICE_AOM_AGREGATOR)
+  transitGraph(networkId: ID!, departureTime: DateTime!, bbox: BoundingBoxInput = null): TransitGraph! @join__field(graph: SERVICE_AOM_AGREGATOR)
   getAllNotifications: [Notification]! @join__field(graph: SERVICE_NOTIFICATIONS)
   getMe: GetUserResponse! @join__field(graph: SERVICE_USER)
-  getOne: GetUserResponse! @join__field(graph: SERVICE_USER)
+  getOne: GetUserResponse! @inaccessible @join__field(graph: SERVICE_USER)
   findAll: [GetUserResponse!]! @join__field(graph: SERVICE_USER)
   findOne(googleId: String!): GetUserResponse! @join__field(graph: SERVICE_USER)
 }
@@ -402,6 +447,28 @@ type TrafficInfoDTO
   source: String!
 }
 
+type TransitEdge
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  edgeId: ID!
+  sourceId: String!
+  targetId: String!
+  weight: Float!
+  length: Float!
+  layer: Int!
+  transitLineId: String
+  name: String
+}
+
+type TransitGraph
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  networkId: String!
+  hourBucket: Int!
+  nodes: [TransitNode!]!
+  edges: [TransitEdge!]!
+}
+
 type TransitNetwork
   @join__type(graph: SERVICE_ADMIN, key: "externalId")
   @join__type(graph: SERVICE_AOM_AGREGATOR, key: "externalId", extension: true)
@@ -414,6 +481,8 @@ type TransitNetwork
   endpointUrl: String @join__field(graph: SERVICE_ADMIN)
   description: String @join__field(graph: SERVICE_ADMIN)
   resources: [Resource!] @join__field(graph: SERVICE_ADMIN)
+  status: TransitNetworkStatus! @join__field(graph: SERVICE_ADMIN)
+  statusLabel: String! @join__field(graph: SERVICE_ADMIN)
 }
 
 input TransitNetworkInput
@@ -427,6 +496,25 @@ input TransitNetworkInput
   endpointUrl: String = null
   description: String = null
   resources: [ResourceInput!] = null
+  status: TransitNetworkStatus = null
+}
+
+enum TransitNetworkStatus
+  @join__type(graph: SERVICE_ADMIN)
+{
+  PENDING_AGGREGATION @join__enumValue(graph: SERVICE_ADMIN)
+  DATA_AVAILABLE @join__enumValue(graph: SERVICE_ADMIN)
+  AGGREGATION_ERROR @join__enumValue(graph: SERVICE_ADMIN)
+  OUT_OF_SERVICE @join__enumValue(graph: SERVICE_ADMIN)
+}
+
+type TransitNode
+  @join__type(graph: SERVICE_AOM_AGREGATOR)
+{
+  id: ID!
+  lat: Float!
+  lon: Float!
+  isTransitStop: Boolean!
 }
 
 input UpdateAdminUserInput
@@ -446,8 +534,8 @@ input UpdateUserInput
   email: String
   age: Int
   pseudo: String
-  role: String
-  update_at: DateTime
+  photo: String
+  updated_at: DateTime
 }
 
 type User
